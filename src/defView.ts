@@ -7,7 +7,7 @@ enum UpdateMode {
 }
 
 export class DefViewViewProvider implements vscode.WebviewViewProvider {
-
+    private currentFilePath: string = ''; // 添加成员变量存储当前文件路径
 	public static readonly viewType = 'defView.definition';
 
 	private static readonly pinnedContext = 'defView.definitionView.isPinned';
@@ -66,6 +66,30 @@ export class DefViewViewProvider implements vscode.WebviewViewProvider {
 				vscode.Uri.joinPath(this._extensionUri, 'media')
 			]
 		};
+
+        // 添加webview消息处理
+		webviewView.webview.onDidReceiveMessage(async message => {
+			switch (message.type) {
+				case 'lineDoubleClick':
+					// 处理双击跳转
+                    try {
+                        // 打开文件
+                        const document = await vscode.workspace.openTextDocument(this.currentFilePath);
+                        const editor = await vscode.window.showTextDocument(document);
+                        
+                        // 跳转到指定行
+                        const line = message.line - 1; // VSCode的行号从0开始
+                        const range = new vscode.Range(line, 0, line, 0);
+                        
+                        // 移动光标并显示该行
+                        editor.selection = new vscode.Selection(range.start, range.start);
+                        editor.revealRange(range, vscode.TextEditorRevealType.InCenter);
+                    } catch (error) {
+                        vscode.window.showErrorMessage(`Failed to open file: ${error}`);
+                    }
+                    break;
+			}
+		});
 
 		webviewView.onDidChangeVisibility(() => {
 			if (this._view?.visible) {
@@ -185,7 +209,7 @@ export class DefViewViewProvider implements vscode.WebviewViewProvider {
 					type: 'update',
 					body: contentInfo.content,
 					updateMode: this._updateMode,
-                    scrollToLine: contentInfo.startLine
+                    scrollToLine: contentInfo.startLine+1
 				});
 			} else {
 				this._view?.webview.postMessage({
@@ -236,12 +260,18 @@ export class DefViewViewProvider implements vscode.WebviewViewProvider {
         };
 	}
 
-	private getDefinitionAtCurrentPositionInEditor(editor: vscode.TextEditor) {
-		return vscode.commands.executeCommand<vscode.Location[]>(
+	private async getDefinitionAtCurrentPositionInEditor(editor: vscode.TextEditor) {
+		const definitions = await vscode.commands.executeCommand<vscode.Location[]>(
 			'vscode.executeDefinitionProvider',
 			editor.document.uri,
 			editor.selection.active);
 
+        if (definitions && definitions.length > 0) {
+            // 保存第一个定义的文件路径
+            this.currentFilePath = definitions[0].uri.fsPath;
+        }
+
+        return definitions;
 	}
 
 	private updateConfiguration() {

@@ -46,6 +46,15 @@
                             // 滚动到该元素
                             lineElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
                             console.log(`Scrolled and highlighted element:`, lineElement);
+
+                            // 添加双击事件监听器
+                            lineElement.addEventListener('dblclick', () => {
+                                // 发送消息给插件
+                                vscode.postMessage({
+                                    type: 'lineDoubleClick',
+                                    line: message.scrollToLine
+                                });
+                            });
                         } else {
                             console.log(`Could not find element with data-line="${message.scrollToLine}"`);
                         }
