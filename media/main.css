@@ -5,6 +5,12 @@ body {
 
 	font-size: 13px;
 	line-height: 17px;
+
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    cursor: pointer; /* 设置鼠标光标为手型 */
 }
 
 pre code {

@@ -18,6 +18,18 @@
 
     let hasUpdated = false;
 
+    // 监听整个代码区域的双击事件
+    window.addEventListener('dblclick', (e) => {
+        // 检查双击的目标元素是否直接是main元素
+        //if (e.target === main) {
+            // 如果是直接点击在main元素上（空白区域），则发送消息
+            vscode.postMessage({
+                type: 'areaDoubleClick',
+                line: 0
+            });
+        //}
+    });
+
     // Handle messages sent from the extension to the webview
     window.addEventListener('message', event => {
         const message = event.data; // The json data that the extension sent
@@ -44,17 +56,17 @@
                             // 添加高亮
                             lineElement.classList.add('highlight');
                             // 滚动到该元素
-                            lineElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            lineElement.scrollIntoView({ behavior: 'auto', block: 'center' });//'smooth'
                             console.log(`Scrolled and highlighted element:`, lineElement);
 
                             // 添加双击事件监听器
-                            lineElement.addEventListener('dblclick', () => {
-                                // 发送消息给插件
-                                vscode.postMessage({
-                                    type: 'lineDoubleClick',
-                                    line: message.scrollToLine
-                                });
-                            });
+                            // lineElement.addEventListener('dblclick', () => {
+                            //     // 发送消息给插件
+                            //     vscode.postMessage({
+                            //         type: 'lineDoubleClick',
+                            //         line: message.scrollToLine
+                            //     });
+                            // });
                         } else {
                             console.log(`Could not find element with data-line="${message.scrollToLine}"`);
                         }

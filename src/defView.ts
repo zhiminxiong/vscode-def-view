@@ -8,6 +8,7 @@ enum UpdateMode {
 
 export class DefViewViewProvider implements vscode.WebviewViewProvider {
     private currentFilePath: string = ''; // 添加成员变量存储当前文件路径
+    private currentLine: number = 0; // 添加行号存储
 	public static readonly viewType = 'defView.definition';
 
 	private static readonly pinnedContext = 'defView.definitionView.isPinned';
@@ -71,6 +72,7 @@ export class DefViewViewProvider implements vscode.WebviewViewProvider {
 		webviewView.webview.onDidReceiveMessage(async message => {
 			switch (message.type) {
 				case 'lineDoubleClick':
+                case 'areaDoubleClick':
 					// 处理双击跳转
                     try {
                         // 打开文件
@@ -78,7 +80,7 @@ export class DefViewViewProvider implements vscode.WebviewViewProvider {
                         const editor = await vscode.window.showTextDocument(document);
                         
                         // 跳转到指定行
-                        const line = message.line - 1; // VSCode的行号从0开始
+                        const line = this.currentLine;//message.line - 1; // VSCode的行号从0开始
                         const range = new vscode.Range(line, 0, line, 0);
                         
                         // 移动光标并显示该行
@@ -269,6 +271,7 @@ export class DefViewViewProvider implements vscode.WebviewViewProvider {
         if (definitions && definitions.length > 0) {
             // 保存第一个定义的文件路径
             this.currentFilePath = definitions[0].uri.fsPath;
+            this.currentLine = definitions[0].range.start.line; // 保存行号
         }
 
         return definitions;
