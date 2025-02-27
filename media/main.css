@@ -24,6 +24,11 @@ pre code {
 	font-style: italic;
 }
 
+.line.highlight {
+    background-color: var(--vscode-editor-selectionBackground);
+    color: var(--vscode-editor-selectionForeground);
+}
+
 #main>hr {
 	display: block;
 	border: none;

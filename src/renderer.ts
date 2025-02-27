@@ -1,6 +1,12 @@
 import * as vscode from 'vscode';
 import { CodeHighlighter } from './codeHighlighter';
 
+export interface FileContentInfo {
+    content: string;
+    startLine: number;
+    endLine: number;
+}
+
 export class Renderer {
 
 	private readonly _disposables: vscode.Disposable[] = [];
@@ -23,30 +29,59 @@ export class Renderer {
 		}
 	}
 
-	public async renderDefinitions(document: vscode.TextDocument, definitions: readonly vscode.Location[] | vscode.LocationLink[]): Promise<string> {
-		let docs = [];
+	public async renderDefinitions(document: vscode.TextDocument, definitions: readonly vscode.Location[] | vscode.LocationLink[]): Promise<FileContentInfo> {
+		let docs: FileContentInfo[] = [];
 
 		for (const def of definitions) {
 			if (def instanceof vscode.Location) {
-				docs.push(await this.getFileContents(def.uri, def.range));
+				docs.push(await this.getFileContentsEx(def.uri, def.range));
 			} else {
-				docs.push(await this.getFileContents(def.targetUri, def.targetRange));
+				docs.push(await this.getFileContentsEx(def.targetUri, def.targetRange));
 			}
 
 		}
 
 		const parts = docs
-			.filter(content => content.length > 0);
+			.filter(info => info.content.length > 0)
+			.map(info => info.content);
 
 		if (!parts.length) {
-			return '';
-		}
+			return {
+                content: '',
+                startLine: 0,
+                endLine: 0
+            }
+		};
 
 		const code = parts.join('\n');
 
 		const highlighter = await this._highlighter.getHighlighter(document);
-		return highlighter(code, document.languageId);
+        return {
+			content: highlighter(code, document.languageId),
+			startLine: docs[0].startLine,
+			endLine: docs[0].endLine
+		};
 	}
+
+    private async getFileContentsEx(uri: vscode.Uri, range: vscode.Range): Promise<FileContentInfo> {
+        const doc = await vscode.workspace.openTextDocument(uri);
+		// console.debug(`uri = ${uri}`);
+		// console.debug(`range = ${range.start.line} - ${range.end.line}`);
+
+		// Read entire file.
+		const rangeText = new vscode.Range(0, 0, doc.lineCount, 0);
+		let lines = doc.getText(rangeText).split(/\r?\n/);
+        let firstLine = range.start.line;
+        let lastLine = range.end.line;
+
+        //console.debug(`uri = ${uri} firstLine = ${firstLine} lastLine = ${lastLine}`);
+
+        return {
+			content: lines.join("\n") + "\n",
+			startLine: firstLine,
+			endLine: lastLine
+		};
+    }
 
 	private async getFileContents(uri: vscode.Uri, range: vscode.Range): Promise<string> {
 		const doc = await vscode.workspace.openTextDocument(uri);

@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { Renderer } from './renderer';
+import { Renderer, FileContentInfo } from './renderer';
 
 enum UpdateMode {
 	Live = 'live',
@@ -168,7 +168,7 @@ export class DefViewViewProvider implements vscode.WebviewViewProvider {
 		this._loading = loadingEntry;
 
 		const updatePromise = (async () => {
-			const html = await this.getHtmlContentForActiveEditor(loadingEntry.cts.token);
+			const contentInfo = await this.getHtmlContentForActiveEditor(loadingEntry.cts.token);
 			if (loadingEntry.cts.token.isCancellationRequested) {
 				return;
 			}
@@ -179,11 +179,13 @@ export class DefViewViewProvider implements vscode.WebviewViewProvider {
 			}
 			this._loading = undefined;
 
-			if (html.length) {
+			if (contentInfo.content.length) {
+                //console.debug(`uri = ${contentInfo.content} startLine = ${contentInfo.startLine} endLine = ${contentInfo.endLine}`);
 				this._view?.webview.postMessage({
 					type: 'update',
-					body: html,
+					body: contentInfo.content,
 					updateMode: this._updateMode,
+                    scrollToLine: contentInfo.startLine
 				});
 			} else {
 				this._view?.webview.postMessage({
@@ -207,19 +209,31 @@ export class DefViewViewProvider implements vscode.WebviewViewProvider {
 		]);
 	}
 
-	private async getHtmlContentForActiveEditor(token: vscode.CancellationToken): Promise<string> {
+	private async getHtmlContentForActiveEditor(token: vscode.CancellationToken): Promise<FileContentInfo> {
 		const editor = vscode.window.activeTextEditor;
 		if (!editor) {
-			return '';
+			return {
+                content: '',
+                startLine: 0,
+                endLine: 0
+            };
 		}
 
 		let definitions = await this.getDefinitionAtCurrentPositionInEditor(editor);
 
 		if (token.isCancellationRequested) {
-			return '';
+			return {
+                content: '',
+                startLine: 0,
+                endLine: 0
+            };
 		}
 
-		return definitions?.length ? await this._renderer.renderDefinitions(editor.document, definitions) : '';
+		return definitions?.length ? await this._renderer.renderDefinitions(editor.document, definitions) : {
+            content: '',
+            startLine: 0,
+            endLine: 0
+        };
 	}
 
 	private getDefinitionAtCurrentPositionInEditor(editor: vscode.TextEditor) {
