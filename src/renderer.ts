@@ -62,7 +62,6 @@ export class Renderer {
 	}
 
     private async getFileContentsEx(uri: vscode.Uri, range: vscode.Range): Promise<FileContentInfo> {
-        console.warn(`getFileContentsEx: ${uri}`);
         const doc = await vscode.workspace.openTextDocument(uri);
 		// console.debug(`uri = ${uri}`);
 		// console.debug(`range = ${range.start.line} - ${range.end.line}`);
