@@ -54,7 +54,7 @@
                         const lineElement = document.querySelector(`[data-line="${message.scrollToLine}"]`);
                         if (lineElement) {
                             // 添加高亮
-                            lineElement.classList.add('highlight');
+                            //lineElement.classList.add('highlight');
                             // 滚动到该元素
                             lineElement.scrollIntoView({ behavior: 'auto', block: 'center' });//'smooth'
                             //console.log(`Scrolled and highlighted element:`, lineElement);

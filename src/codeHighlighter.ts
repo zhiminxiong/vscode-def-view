@@ -58,16 +58,16 @@ export class CodeHighlighter {
 		}
 	}
 
-	public async getHighlighter(document: vscode.TextDocument): Promise<(code: string, language: string) => string> {
+	public async getHighlighter(document: vscode.TextDocument): Promise<(code: string, language: string, idx: number, selectedText: string|undefined) => string> {
 		const highlighter = await this._highlighter;
 
-		return (code: string, inputLanguage: string): string => {
+		return (code: string, inputLanguage: string, idx: number, selectedText: string|undefined): string => {
 			const language = inputLanguage || document.languageId;
 			if (language && highlighter) {
 				try {
 					const languageId = getLanguageId(language);
 					if (languageId) {
-						return highlighter.codeToHtml!(code, languageId);
+						return highlighter.codeToHtml!(code, languageId, idx, selectedText);
 					}
 				} catch (err) {
 					// noop

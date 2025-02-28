@@ -30,7 +30,8 @@ export class Renderer {
 		}
 	}
 
-	public async renderDefinitions(document: vscode.TextDocument, definitions: readonly vscode.Location[] | vscode.LocationLink[]): Promise<FileContentInfo> {
+	public async renderDefinitions(document: vscode.TextDocument, definitions: readonly vscode.Location[] | vscode.LocationLink[], 
+                                    selectedText: string | undefined): Promise<FileContentInfo> {
 		let docs: FileContentInfo[] = [];
 
 		for (const def of definitions) {
@@ -39,7 +40,6 @@ export class Renderer {
 			} else {
 				docs.push(await this.getFileContentsEx(def.targetUri, def.targetRange));
 			}
-
 		}
 
 		const parts = docs
@@ -54,7 +54,7 @@ export class Renderer {
 
 		const highlighter = await this._highlighter.getHighlighter(document);
         return {
-			content: highlighter(code, document.languageId),
+			content: highlighter(code, document.languageId, docs[0].startLine, selectedText),
 			startLine: docs[0].startLine,
 			endLine: docs[0].endLine,
             jmpUri: docs[0].jmpUri

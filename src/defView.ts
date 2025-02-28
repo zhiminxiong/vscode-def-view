@@ -249,13 +249,23 @@ export class DefViewViewProvider implements vscode.WebviewViewProvider {
 			return { content: '', startLine: 0, endLine: 0, jmpUri: undefined };
 		}
 
+        // 获取当前光标位置
+        const position = editor.selection.active;
+
+        // 获取当前光标位置下的单词或标识符的范围
+        const wordRange = editor.document.getWordRangeAtPosition(position);
+
+        // 获取该范围内的文本内容
+        const selectedText = wordRange ? editor.document.getText(wordRange) : '';
+        //vscode.window.showInformationMessage(`Selected text: ${selectedText}`);
+
 		let definitions = await this.getDefinitionAtCurrentPositionInEditor(editor);
 
 		if (token.isCancellationRequested || !definitions || definitions.length === 0) {
 			return { content: '', startLine: 0, endLine: 0, jmpUri: undefined };
 		}
 
-		return definitions?.length ? await this._renderer.renderDefinitions(editor.document, definitions) : {
+		return definitions?.length ? await this._renderer.renderDefinitions(editor.document, definitions, selectedText) : {
             content: '',
             startLine: 0,
             endLine: 0,
