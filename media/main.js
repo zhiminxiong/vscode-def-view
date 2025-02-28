@@ -33,7 +33,7 @@
     // Handle messages sent from the extension to the webview
     window.addEventListener('message', event => {
         const message = event.data; // The json data that the extension sent
-        console.debug(`message: ${message}`);
+        //console.debug(`message: ${message}`);
         switch (message.type) {
             case 'update':
                 {
@@ -44,7 +44,7 @@
                     updateContent(message.body);
                     hasUpdated = true;
                     if (message.scrollToLine) {
-                        console.log(`Trying to scroll to line: ${message.scrollToLine}`);
+                        //console.log(`Trying to scroll to line: ${message.scrollToLine}`);
                         // 移除之前的高亮
                         document.querySelectorAll('.line.highlight').forEach(el => {
                             el.classList.remove('highlight');
@@ -57,7 +57,7 @@
                             lineElement.classList.add('highlight');
                             // 滚动到该元素
                             lineElement.scrollIntoView({ behavior: 'auto', block: 'center' });//'smooth'
-                            console.log(`Scrolled and highlighted element:`, lineElement);
+                            //console.log(`Scrolled and highlighted element:`, lineElement);
 
                             // 添加双击事件监听器
                             // lineElement.addEventListener('dblclick', () => {
@@ -68,7 +68,7 @@
                             //     });
                             // });
                         } else {
-                            console.log(`Could not find element with data-line="${message.scrollToLine}"`);
+                            //console.log(`Could not find element with data-line="${message.scrollToLine}"`);
                         }
                     }
                     break;

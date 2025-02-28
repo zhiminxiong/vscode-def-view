@@ -5,6 +5,7 @@ export interface FileContentInfo {
     content: string;
     startLine: number;
     endLine: number;
+    jmpUri: vscode.Uri | undefined;
 }
 
 export class Renderer {
@@ -46,11 +47,7 @@ export class Renderer {
 			.map(info => info.content);
 
 		if (!parts.length) {
-			return {
-                content: '',
-                startLine: 0,
-                endLine: 0
-            }
+			return { content: '', startLine: 0, endLine: 0, jmpUri: undefined }
 		};
 
 		const code = parts.join('\n');
@@ -59,11 +56,13 @@ export class Renderer {
         return {
 			content: highlighter(code, document.languageId),
 			startLine: docs[0].startLine,
-			endLine: docs[0].endLine
+			endLine: docs[0].endLine,
+            jmpUri: docs[0].jmpUri
 		};
 	}
 
     private async getFileContentsEx(uri: vscode.Uri, range: vscode.Range): Promise<FileContentInfo> {
+        console.warn(`getFileContentsEx: ${uri}`);
         const doc = await vscode.workspace.openTextDocument(uri);
 		// console.debug(`uri = ${uri}`);
 		// console.debug(`range = ${range.start.line} - ${range.end.line}`);
@@ -79,7 +78,8 @@ export class Renderer {
         return {
 			content: lines.join("\n") + "\n",
 			startLine: firstLine,
-			endLine: lastLine
+			endLine: lastLine,
+            jmpUri: uri
 		};
     }
 

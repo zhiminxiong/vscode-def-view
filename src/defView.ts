@@ -8,6 +8,7 @@ enum UpdateMode {
 
 export class DefViewViewProvider implements vscode.WebviewViewProvider {
     private currentFilePath: string = ''; // 添加成员变量存储当前文件路径
+    private currentUri: vscode.Uri | undefined = undefined;
     private currentLine: number = 0; // 添加行号存储
 	public static readonly viewType = 'defView.definition';
 
@@ -75,8 +76,10 @@ export class DefViewViewProvider implements vscode.WebviewViewProvider {
                 case 'areaDoubleClick':
 					// 处理双击跳转
                     try {
+                        if (!this.currentUri)
+                            throw new Error('No definition URI available');
                         // 打开文件
-                        const document = await vscode.workspace.openTextDocument(this.currentFilePath);
+                        const document = await vscode.workspace.openTextDocument(this.currentUri);
                         const editor = await vscode.window.showTextDocument(document);
                         
                         // 跳转到指定行
@@ -205,6 +208,11 @@ export class DefViewViewProvider implements vscode.WebviewViewProvider {
 			}
 			this._loading = undefined;
 
+            if (contentInfo.jmpUri) {
+                this.currentUri = contentInfo.jmpUri;
+                this.currentLine = contentInfo.startLine;
+            }
+
 			if (contentInfo.content.length) {
                 //console.debug(`uri = ${contentInfo.content} startLine = ${contentInfo.startLine} endLine = ${contentInfo.endLine}`);
 				this._view?.webview.postMessage({
@@ -238,44 +246,30 @@ export class DefViewViewProvider implements vscode.WebviewViewProvider {
 	private async getHtmlContentForActiveEditor(token: vscode.CancellationToken): Promise<FileContentInfo> {
 		const editor = vscode.window.activeTextEditor;
 		if (!editor) {
-			return {
-                content: '',
-                startLine: 0,
-                endLine: 0
-            };
+			return { content: '', startLine: 0, endLine: 0, jmpUri: undefined };
 		}
 
 		let definitions = await this.getDefinitionAtCurrentPositionInEditor(editor);
 
-		if (token.isCancellationRequested) {
-			return {
-                content: '',
-                startLine: 0,
-                endLine: 0
-            };
+		if (token.isCancellationRequested || !definitions || definitions.length === 0) {
+			return { content: '', startLine: 0, endLine: 0, jmpUri: undefined };
 		}
 
 		return definitions?.length ? await this._renderer.renderDefinitions(editor.document, definitions) : {
             content: '',
             startLine: 0,
-            endLine: 0
+            endLine: 0,
+            jmpUri: undefined
         };
 	}
 
 	private async getDefinitionAtCurrentPositionInEditor(editor: vscode.TextEditor) {
-		const definitions = await vscode.commands.executeCommand<vscode.Location[]>(
-			'vscode.executeDefinitionProvider',
-			editor.document.uri,
-			editor.selection.active);
-
-        if (definitions && definitions.length > 0) {
-            // 保存第一个定义的文件路径
-            this.currentFilePath = definitions[0].uri.fsPath;
-            this.currentLine = definitions[0].range.start.line; // 保存行号
-        }
-
-        return definitions;
-	}
+        return await vscode.commands.executeCommand<vscode.Location[]>(
+                'vscode.executeDefinitionProvider',
+                editor.document.uri,
+                editor.selection.active
+            );
+    }
 
 	private updateConfiguration() {
 		const config = vscode.workspace.getConfiguration('defView');
