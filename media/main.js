@@ -30,25 +30,55 @@
         //}
     });
 
+    let loadingTimer = null;
+
+    // 延迟显示loading并添加透明度过渡
+    function showLoading() {
+        loadingTimer = setTimeout(() => {
+            const loading = document.querySelector('.loading');
+            loading.classList.add('show');
+            loading.classList.add('active');
+        }, 100);
+    }
+
+    // 先淡出loading再移除active类
+    function hideLoading() {
+        if (loadingTimer) {
+            clearTimeout(loadingTimer);
+            loadingTimer = null;
+        }
+        const loading = document.querySelector('.loading');
+        loading.classList.remove('show');
+        setTimeout(() => {
+            loading.classList.remove('active');
+        }, 200);
+    }
+
     // Handle messages sent from the extension to the webview
     window.addEventListener('message', event => {
         const message = event.data; // The json data that the extension sent
         //console.debug(`message: ${message}`);
         switch (message.type) {
+            case 'startLoading':
+                showLoading();
+                break;
+            case 'endLoading':
+                hideLoading();
+                break;
             case 'update':
                 {
-                    vscode.postMessage({ 
-                        type: 'log', 
-                        message: `Received message: ${JSON.stringify(message)}`
-                    });
+                    // vscode.postMessage({ 
+                    //     type: 'log', 
+                    //     message: `Received message: ${JSON.stringify(message)}`
+                    // });
                     updateContent(message.body);
                     hasUpdated = true;
                     if (message.scrollToLine) {
                         //console.log(`Trying to scroll to line: ${message.scrollToLine}`);
                         // 移除之前的高亮
-                        document.querySelectorAll('.line.highlight').forEach(el => {
-                            el.classList.remove('highlight');
-                        });
+                        // document.querySelectorAll('.line.highlight').forEach(el => {
+                        //     el.classList.remove('highlight');
+                        // });
                         
                         // 找到对应行的元素并滚动
                         const lineElement = document.querySelector(`[data-line="${message.scrollToLine}"]`);
@@ -71,6 +101,7 @@
                             //console.log(`Could not find element with data-line="${message.scrollToLine}"`);
                         }
                     }
+                    hideLoading();
                     break;
                 }
             case 'noContent':

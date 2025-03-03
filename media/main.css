@@ -1,6 +1,6 @@
 body {
 	word-wrap: break-word;
-	margin: 1em 0;
+    margin: 1em 0;
 	padding: 0;
 
 	font-size: 14px;
@@ -10,7 +10,20 @@ body {
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
-    cursor: pointer; /* 设置鼠标光标为手型 */
+
+    position: relative;  /* Add position relative */
+}
+
+/* Add fixed top border */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background-color: var(--vscode-sideBarSectionHeader-border);
+    z-index: 1000;
 }
 
 pre code {
@@ -21,7 +34,7 @@ pre code {
 }
 
 #main>* {
-	padding: 0 20px;
+	padding: 0;
 	width: fit-content;
 	overflow-x: scroll;
 }
