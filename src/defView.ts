@@ -357,12 +357,11 @@ export class DefViewViewProvider implements vscode.WebviewViewProvider {
                 return;
             }
             this._loading = undefined;
+            this._currentCacheKey = newCacheKey;
 
             if (contentInfo.jmpUri) {
                 this.currentUri = contentInfo.jmpUri;
                 this.currentLine = contentInfo.startLine;
-
-                this._currentCacheKey = newCacheKey;
             }
 
             if (contentInfo.content.length) {
