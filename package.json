@@ -38,8 +38,17 @@
 		"workspace"
 	],
 	"contributes": {
+        "viewsContainers": {
+            "activitybar": [
+				{
+					"id": "defView-definition",
+					"title": "Context Window",
+                    "icon": "$(symbol-class)"
+				}
+            ]
+        },
 		"views": {
-			"panel": [
+			"defView-definition": [
 				{
 					"type": "webview",
 					"id": "defView.definition",

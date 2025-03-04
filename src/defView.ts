@@ -14,6 +14,9 @@ export class DefViewViewProvider implements vscode.WebviewViewProvider {
         updateMode: UpdateMode;
     };
 
+    private _mousePressed: boolean = false;
+    private _mouseTimer?: NodeJS.Timeout;  // 添加timer引用
+
     //private static readonly outputChannel = vscode.window.createOutputChannel('Definition View');
 
     private currentUri: vscode.Uri | undefined = undefined;
@@ -71,11 +74,38 @@ export class DefViewViewProvider implements vscode.WebviewViewProvider {
 
         // 修改选择变化事件处理
         vscode.window.onDidChangeTextEditorSelection((e) => {
-            // 只有当用户主动改变位置时才触发更新，且不在文本选择状态下
-            if ((e.kind === vscode.TextEditorSelectionChangeKind.Mouse || 
-                e.kind === vscode.TextEditorSelectionChangeKind.Keyboard) && e.selections[0].isEmpty) {
-                //console.log('[definition] vscode.window.onDidChangeTextEditorSelection');
-                this.update();
+            // 跳过非空选区的更新
+            if (!e.selections[0].isEmpty) {
+                return;
+            }
+
+            // 只处理鼠标和键盘触发的事件
+            if (e.kind === vscode.TextEditorSelectionChangeKind.Mouse || 
+                e.kind === vscode.TextEditorSelectionChangeKind.Keyboard) {
+                
+                if (e.kind === vscode.TextEditorSelectionChangeKind.Mouse) {
+                    // 鼠标事件：标记需要更新，但等待鼠标松开
+                    this._mousePressed = true;
+
+                    // 清除之前的timer
+                    if (this._mouseTimer) {
+                        clearTimeout(this._mouseTimer);
+                    }
+                    
+                    // 设置一个延时检测鼠标松开状态
+                    this._mouseTimer = setTimeout(() => {
+                        if (this._mousePressed) {
+                            this._mousePressed = false;
+                            const editor = vscode.window.activeTextEditor;
+                            if (editor?.selection.isEmpty) {
+                                this.update();
+                            }
+                        }
+                    }, 300); // 300ms 后检查鼠标状态
+                } else {
+                    // 键盘事件：直接更新
+                    this.update();
+                }
             }
         }, null, this._disposables);
 
@@ -183,8 +213,14 @@ export class DefViewViewProvider implements vscode.WebviewViewProvider {
                     // Hide loading after content is updated
                     //this._view?.webview.postMessage({ type: 'endLoading' });
                 }
-                else
+                else {
+                    this._view?.webview.postMessage({
+                        type: 'noContent',
+                        body: '&nbsp;&nbsp;No symbol found at current cursor position',
+                        updateMode: this._updateMode,
+                    });
                     this.update(/* force */ true);
+                }
             } else {
                 if (this._currentPanel) {
                     this._currentPanel.dispose();
@@ -398,7 +434,7 @@ export class DefViewViewProvider implements vscode.WebviewViewProvider {
             updatePromise,
 
             // Don't show progress indicator right away, which causes a flash
-            new Promise<void>(resolve => setTimeout(resolve, 250)).then(() => {
+            new Promise<void>(resolve => setTimeout(resolve, 0)).then(() => {
                 if (loadingEntry.cts.token.isCancellationRequested) {
                     return;
                 }
