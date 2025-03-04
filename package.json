@@ -39,11 +39,11 @@
 	],
 	"contributes": {
 		"views": {
-			"explorer": [
+			"panel": [
 				{
 					"type": "webview",
 					"id": "defView.definition",
-					"name": "Definition View",
+					"name": "Context Window",
 					"contextualTitle": "Context"
 				}
 			]
