@@ -39,7 +39,7 @@
 	],
 	"contributes": {
         "viewsContainers": {
-            "activitybar": [
+            "panel": [
 				{
 					"id": "defView-definition",
 					"title": "Context Window",

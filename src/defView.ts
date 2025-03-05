@@ -367,6 +367,7 @@ export class DefViewViewProvider implements vscode.WebviewViewProvider {
             return;
         }
 
+        // Cancel any existing loading
         if (this._loading) {
             this._loading.cts.cancel();
             this._loading = undefined;
