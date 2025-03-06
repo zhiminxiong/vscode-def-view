@@ -558,12 +558,12 @@ export class DefViewViewProvider implements vscode.WebviewViewProvider {
                     }
     
                     const startLine = Math.max(range.start.line - 3, 0);
-                    const endLine = Math.min(range.end.line + 3, document.lineCount - 1);
+                    const endLine = Math.min(range.start.line + 3, document.lineCount - 1);
                     
                     const codeLines = [];
                     for (let i = startLine; i <= endLine; i++) {
                         const line = document.lineAt(i).text;
-                        if (i >= range.start.line && i <= range.end.line) {
+                        if (i == range.start.line) {
                             codeLines.push(`<mark>${line}</mark>`);
                         } else {
                             codeLines.push(line);
